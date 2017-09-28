@@ -1,6 +1,6 @@
 {
   "name": "ezmod/ezconfig_manager",
-  "type": "drupal-module",
+  "type": "ezmod-module",
   "description": "Handles environment specific config",
   "author": "Danny Dohmen | ezCompany",
   "version": "1.0"
