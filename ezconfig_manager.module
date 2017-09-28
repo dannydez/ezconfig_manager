@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * @file
+ * The ezConfig manager manages specific config per environment.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function ezconfig_manager_form_config_admin_import_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $ignore = \Drupal::configFactory()->get('environment_config')->get('ignore');
+  foreach ($form as $form_key => $row) {
+    if (isset($row['update'])) {
+      foreach ($row['update']['list']['#rows'] as $key => $config) {
+        if (in_array($config['name'], $ignore)) {
+          $form[$form_key]['update']['list']['#rows'][$key]['name'] =
+            t('%config Overidden by ezconfig manager', ['%config' => $config['name']]);
+          $form[$form_key]['update']['list']['#rows'][$key]['operations'] = [];
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_drush_command_alter().
+ */
+function ezconfig_manager_drush_command_alter(&$command) {
+  if (\Drupal::configFactory()->get('environment_config')->get('environment')
+    && \Drupal::configFactory()->get('environment_config')->get('environment') != 'prod') {
+    if ($command['command'] == 'config-export') {
+      $command['command'] = 'ezconfig-export';
+      $command['command-hook'] = 'ezconfig-export';
+      $command['primary function'] = FALSE;
+      $command['arguments'] = [];
+      drush_set_command($command);
+    }
+
+    if ($command['command'] == 'config-import') {
+      $command['command'] = 'ezconfig-import';
+      $command['command-hook'] = 'ezconfig-import';
+      $command['primary function'] = FALSE;
+      $command['arguments'] = [];
+      drush_set_command($command);
+    }
+  }
+}
+
+/**
+ * Custom function to get dirs.
+ */
+function ezconfig_manager_get_dirs($exclude = FALSE) {
+  global $config_directories;
+
+  $sync = $config_directories[CONFIG_SYNC_DIRECTORY];
+  if ($exclude == TRUE) {
+    $configs = [
+      'active' => \Drupal::configFactory()->get('environment_config')->get('config'),
+    ];
+
+    $global = substr($sync, 0, (similar_text($sync, $configs['active']) - 1));
+
+    foreach (scandir($global) as $dir) {
+      if (strrpos($dir, '.') === FALSE && !in_array($global . $dir, $configs)
+        && $global . $dir != $sync) {
+        $configs[$dir] = $global . $dir;
+      }
+    }
+
+    $exclude_dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://ezconfig_exclude");
+    if (!realpath($exclude_dir)) {
+      \Drupal::service('file_system')->mkdir($exclude_dir);
+    }
+
+    $configs['ezconfig_exclude'] = $exclude_dir;
+  }
+  else {
+    $configs = [];
+
+    $config = \Drupal::configFactory()->get('environment_config')->get('config');
+    $configs[$config] = 'active';
+
+    $global = substr($sync, 0, (similar_text($sync, $config) - 1));
+
+    foreach (scandir($global) as $dir) {
+      if (strrpos($dir, '.') === FALSE && !in_array($dir, $configs)
+        && $global . $dir != $sync) {
+        $configs[$global . $dir] = $dir;
+      }
+    }
+
+    $exclude_dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://ezconfig_exclude");
+    if (!realpath($exclude_dir)) {
+      \Drupal::service('file_system')->mkdir($exclude_dir);
+    }
+  }
+
+  return $configs;
+}

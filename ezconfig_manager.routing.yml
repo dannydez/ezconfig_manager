@@ -1,0 +1,7 @@
+ezconfig_manager.exclude_config:
+  path: '/admin/config/development/configuration/exclude/config'
+  defaults:
+    _title: 'Excluded config'
+    _form: '\Drupal\ezconfig_manager\Form\ExcludedConfigForm'
+  requirements:
+    _permission: 'import configuration'

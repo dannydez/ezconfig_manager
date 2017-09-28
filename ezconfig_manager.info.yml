@@ -1,0 +1,6 @@
+name: ezConfig Manager
+type: module
+description: 'Gives possibility to have config per environment.'
+package: ezCompany
+core: 8.x
+configure: ezconfig_manager.exclude_config
