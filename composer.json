@@ -1,5 +1,5 @@
 {
-  "name": "drupal/ezcompany_manager",
+  "name": "ezmodule/ezcompany_manager",
   "type": "module",
   "description": "Handles environment specific config",
   "author": "Danny Domen | ezCompany",
