@@ -1,12 +1,13 @@
 
 #usage
 
-This module overrides the drush cex and cim, if this is not the production,
-if the custom config dir (specified in settings.php), has config it will be
-imported after the normal configuration. 
+Drush cex places all the excluded files in the invironment specific folders.
+on admin/config/development/configuration/exclude/config you can see the
+environment specific files and edit them.
 
-the $config['environment_config']['ignore'] (example below) are copied in 
-the other config directories if this site.
+Drush cim looks of there is environment specific config and imports them after 
+the normal import. The sync folder is always the production environment.
+
 
 #Config example settings.local.php
 
@@ -20,4 +21,26 @@ $config['environment_config'] = array(
     'webform.webform.*',
   )
 );
+```
+
+#composer.json
+
+
+```
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/dannydez/ezconfig_manager"
+    }
+]
+
+"require": {
+    "ezmod/ezconfig_manager": "dev-master"
+}
+
+"extra": {
+    "installer-paths": {
+        "htdocs/modules/custom/{$name}": ["type:drupal-custom-module"]
+    }
+}
 ```
