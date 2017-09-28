@@ -44,3 +44,6 @@ $config['environment_config'] = array(
     }
 }
 ```
+
+If the project is pulled to mach you will need an token
+composer config -g github-oauth.github.com bdb187d7a8108382d76bddd24fd7f44ff521ea6e
