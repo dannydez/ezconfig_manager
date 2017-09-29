@@ -11,11 +11,11 @@ use Drupal\Core\Form\FormStateInterface;
  * Implements hook_form_alter().
  */
 function ezconfig_manager_form_config_admin_import_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $ignore = \Drupal::configFactory()->get('environment_config')->get('ignore');
+  $copy = \Drupal::configFactory()->get('environment_config')->get('copy');
   foreach ($form as $form_key => $row) {
     if (isset($row['update'])) {
       foreach ($row['update']['list']['#rows'] as $key => $config) {
-        if (in_array($config['name'], $ignore)) {
+        if (in_array($config['name'], $copy)) {
           $form[$form_key]['update']['list']['#rows'][$key]['name'] =
             t('%config Overidden by ezconfig manager', ['%config' => $config['name']]);
           $form[$form_key]['update']['list']['#rows'][$key]['operations'] = [];

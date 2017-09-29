@@ -12,11 +12,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Unish\saCase;
 
 /**
  * Provides a form for exporting a single configuration file.
  */
-class ExcludedConfigForm extends FormBase {
+class EnvironmentConfigForm extends FormBase {
 
   /**
    * The entity manager.
@@ -106,6 +107,7 @@ class ExcludedConfigForm extends FormBase {
       '#prefix' => '<div id="edit-export-wrapper">',
       '#suffix' => '</div>',
     ];
+
     if ($config_name) {
       $fake_form_state = (new FormState())->setValues([
         'config_name' => $config_name,
@@ -169,14 +171,19 @@ class ExcludedConfigForm extends FormBase {
    * Handles switching the configuration type selector.
    */
   protected function findConfiguration() {
-    $environment = \Drupal::configFactory()->get('environment_config');
-
-    $configs = [];
-    foreach ($environment->get('ignore') as $conf) {
-      $configs[$conf . '.yml'] = $conf;
+    $files = [];
+    foreach ($this->getDirs() as $path => $env) {
+      $yml = scandir($path);
+      foreach ($yml as $file) {
+        if (strrpos($file, '.yml') !== FALSE) {
+          if (!in_array($file, $files)) {
+            $files[$file] = $file;
+          }
+        }
+      }
     }
 
-    return $configs;
+    return $files;
   }
 
   /**
@@ -222,6 +229,17 @@ class ExcludedConfigForm extends FormBase {
     }
 
     return $configs;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $dir = $form_state->getValue('dir');
+
+    if (!empty($dir) && !is_writable($dir)) {
+      $form_state->setError($form['dir'], $this->t('%dir is not writable', ['%dir' => $dir]));
+    }
   }
 
   /**

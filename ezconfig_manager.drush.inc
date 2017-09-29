@@ -19,7 +19,7 @@ use Drush\Log\LogLevel;
 function ezconfig_manager_drush_command() {
   $deps = ['drupal dependencies' => ['config']];
   $items['ezconfig-export'] = [
-    'description' => 'Export configuration to a directory and apply an ignore list.',
+    'description' => 'Export configuration to a directory and apply an copy list.',
     'core' => ['8+'],
     'aliases' => ['ezcex']
   ];
@@ -49,14 +49,14 @@ function drush_ezconfig_manager_ezconfig_export() {
   }
 
   $patterns = [];
-  $ignore_list = $environment->get('ignore');
-  if (isset($ignore_list) && !empty($ignore_list)) {
-    foreach ($ignore_list as $ignore) {
+  $copy_list = $environment->get('copy');
+  if (isset($copy_list) && !empty($copy_list)) {
+    foreach ($copy_list as $copy) {
       // Allow for accidental .yml extension.
-      if (substr($ignore, -4) === 'export.yml') {
-        $ignore = substr($ignore, 0, -4);
+      if (substr($copy, -4) === 'export.yml') {
+        $copy = substr($copy, 0, -4);
       }
-      $patterns[] = '/^' . str_replace('\*', '(.*)', preg_quote($ignore)) . '\.yml/';
+      $patterns[] = '/^' . str_replace('\*', '(.*)', preg_quote($copy)) . '\.yml/';
     }
   }
 
