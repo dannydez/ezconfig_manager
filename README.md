@@ -1,12 +1,19 @@
 
 #usage
 
-Drush cex places all the excluded files in the invironment specific folders.
-on admin/config/development/configuration/exclude/config you can see the
-environment specific files and edit them.
+This module provides config per environment. You can use the standard drush 
+commands to export and import the config.
 
-Drush cim looks of there is environment specific config and imports them after 
-the normal import. The sync folder is always the production environment.
+Drush cex automatically adds all the files defined in the 
+`$config['environment_config']['copy']` in the config directories (except sync).
+
+You can change the specific config using 
+`admin/config/development/configuration/environment/config`
+
+Drush cim imports the whole sync directory and after that he will import the 
+config from the `$config['environment_config']['config']` directory.
+
+The sync folder is basically the prod config.
 
 
 #Config example settings.local.php
@@ -15,7 +22,7 @@ the normal import. The sync folder is always the production environment.
 $config['environment_config'] = array(
   'config' => '../config/default/test',
   'environment' => 'test',
-  'ignore' => array(
+  'copy' => array(
     'system.mail',
     'system.site',
     'webform.webform.*',
@@ -44,6 +51,3 @@ $config['environment_config'] = array(
     }
 }
 ```
-
-If the project is pulled to mach you will need an token
-composer config -g github-oauth.github.com bdb187d7a8108382d76bddd24fd7f44ff521ea6e

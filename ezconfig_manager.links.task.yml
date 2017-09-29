@@ -1,4 +1,4 @@
-ezconfig_manager.excluded_config:
-  route_name: ezconfig_manager.exclude_config
-  title: 'Excluded config'
+ezconfig_manager.environment_config:
+  route_name: ezconfig_manager.environment_config
+  title: 'Environment config'
   base_route: config.sync
