@@ -60,6 +60,24 @@ function drush_ezconfig_manager_ezconfig_export() {
     }
   }
 
+  $exclude_patterns = [];
+  $exclude_list = $environment->get('exclude_config');
+  $exclude_modules = $environment->get('exclude_modules');
+
+  foreach ($exclude_modules as $module) {
+    $exclude_list[] = $module . '.*';
+  }
+
+  if (isset($exclude_list) && !empty($exclude_list)) {
+    foreach ($exclude_list as $exclude) {
+      // Allow for accidental .yml extension.
+      if (substr($exclude, -4) === 'export.yml') {
+        $exclude = substr($exclude, 0, -4);
+      }
+      $exclude_patterns[] = '/^' . str_replace('\*', '(.*)', preg_quote($exclude)) . '\.yml/';
+    }
+  }
+
   $temp_dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://ezconfig_temp");
   if (!realpath($temp_dir)) {
     \Drupal::service('file_system')->mkdir($temp_dir);
@@ -73,6 +91,16 @@ function drush_ezconfig_manager_ezconfig_export() {
 
   $result = _drush_config_export($destination, $destination_dir, FALSE);
 
+  $yaml = Yaml::decode(file_get_contents($target . '/core.extension.yml'));
+
+  foreach ($yaml['module'] as $module => $enabled) {
+    if (in_array($module, $exclude_modules)) {
+      unset($yaml['module'][$module]);
+    }
+  }
+
+  file_put_contents($target . '/core.extension.yml', Yaml::encode($yaml));
+
   $dirs = ezconfig_manager_get_dirs();
   foreach ($patterns as $pattern) {
     foreach (file_scan_directory($destination_dir, $pattern) as $file_url => $file) {
@@ -85,6 +113,13 @@ function drush_ezconfig_manager_ezconfig_export() {
 
     foreach (file_scan_directory($temp_dir, $pattern) as $file_url => $file) {
       copy($file_url, $destination_dir . '/' . $file->filename);
+    }
+  }
+
+  $file_service = \Drupal::service('file_system');
+  foreach ($exclude_patterns as $pattern) {
+    foreach (file_scan_directory($destination_dir, $pattern) as $file_url => $file) {
+      $file_service->unlink($file_url);
     }
   }
 

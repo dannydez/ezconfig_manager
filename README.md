@@ -7,6 +7,15 @@ commands to export and import the config.
 Drush cex automatically adds all the files defined in the 
 `$config['environment_config']['copy']` in the config directories (except sync).
 
+There is a possibility to exclude single config files using the 
+`$config['environment_config']['exclude_config']` all files in this array will
+removed from the sync directory.
+
+There is a possibility to exclude modules using the 
+`$config['environment_config']['exclude_modules']`  all files of these modules
+will be removed from the sync directory and the module will be removed from the
+core.extension.yml.
+
 You can change the specific config using 
 `admin/config/development/configuration/environment/config`
 
@@ -25,8 +34,13 @@ $config['environment_config'] = array(
   'copy' => array(
     'system.mail',
     'system.site',
-    'webform.webform.*',
-  )
+  ),
+  'exclude_config' => array(
+    '',
+  ),,
+  'exclude_modules' => array(
+    'devel',
+  ),
 );
 ```
 
