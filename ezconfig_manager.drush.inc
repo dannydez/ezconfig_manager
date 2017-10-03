@@ -86,6 +86,8 @@ function drush_ezconfig_manager_ezconfig_export() {
   foreach ($patterns as $pattern) {
     foreach (file_scan_directory($destination_dir, $pattern) as $file_url => $file) {
       copy($file_url, $temp_dir . '/' . $file->filename);
+      $env_file = $environment->get('config') . '/' . $file->name . '.yml';
+      copy($env_file, $file_url);
     }
   }
 

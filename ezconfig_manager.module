@@ -18,9 +18,13 @@ function ezconfig_manager_form_config_admin_import_form_alter(&$form, FormStateI
     if (isset($row['update'])) {
       foreach ($row['update']['list']['#rows'] as $key => $config) {
         if (in_array($config['name'] . '.yml', $copy)) {
-          $form[$form_key]['update']['list']['#rows'][$key]['name'] =
-            t('%config Overidden by ezconfig manager', ['%config' => $config['name']]);
-          $form[$form_key]['update']['list']['#rows'][$key]['operations'] = [];
+          unset($form[$form_key]['update']['heading']);
+          unset($form[$form_key]['update']['list']['#rows'][$key]);
+          if (empty($form[$form_key]['update']['list']['#rows'])) {
+            $form[$form_key]['update']['list']['#rows'][$key]['name'] = t('There are no configuration changes to import.');
+            $form[$form_key]['update']['list']['#rows'][$key]['operations'] = '';
+            unset($form['actions']);
+          }
         }
       }
     }
