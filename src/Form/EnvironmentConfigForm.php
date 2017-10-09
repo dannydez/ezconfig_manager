@@ -2,17 +2,12 @@
 
 namespace Drupal\ezconfig_manager\Form;
 
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Unish\saCase;
 
 /**
  * Provides a form for exporting a single configuration file.
@@ -117,7 +112,7 @@ class EnvironmentConfigForm extends FormBase {
 
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Submit')
+      '#value' => $this->t('Submit'),
     ];
 
     return $form;
@@ -173,17 +168,46 @@ class EnvironmentConfigForm extends FormBase {
   protected function findConfiguration() {
     $files = [];
     foreach ($this->getDirs() as $path => $env) {
-      $yml = scandir($path);
-      foreach ($yml as $file) {
-        if (strrpos($file, '.yml') !== FALSE) {
-          if (!in_array($file, $files)) {
-            $files[$file] = $file;
+      foreach ($this->getSubDirs($path) as $subdir) {
+        $yml = scandir($subdir);
+
+        foreach ($yml as $file) {
+          if (strrpos($file, '.yml') !== FALSE) {
+            $extra = str_replace($path, '', $subdir);
+
+            if (!empty($extra)) {
+              $file = $extra . '/' . $file;
+            }
+
+            if (!in_array($file, $files)) {
+              $files[addslashes($file)] = $file;
+            }
           }
         }
       }
     }
 
     return $files;
+  }
+
+  /**
+   * Custom funtion to get sub dirs.
+   */
+  protected function getSubDirs($dir) {
+    $sub = new \RecursiveIteratorIterator(
+      new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+      \RecursiveIteratorIterator::SELF_FIRST,
+      \RecursiveIteratorIterator::CATCH_GET_CHILD
+    );
+
+    $paths = [$dir];
+    foreach ($sub as $path => $dir) {
+      if ($dir->isDir()) {
+        $paths[] = $path;
+      }
+    }
+
+    return $paths;
   }
 
   /**
@@ -236,9 +260,15 @@ class EnvironmentConfigForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $dir = $form_state->getValue('dir');
+    $tmp = explode('/', $form_state->getValue('config_name'));
+    $config_name = $tmp[(count($tmp) - 1)];
 
     if (!empty($dir) && !is_writable($dir)) {
       $form_state->setError($form['dir'], $this->t('%dir is not writable', ['%dir' => $dir]));
+    }
+
+    if (!is_writable($dir . '/' . $config_name)) {
+      $form_state->setError($form['config_name'], $this->t('%config is not writable', ['%config' => $dir . '/' . $config_name]));
     }
   }
 
@@ -247,8 +277,7 @@ class EnvironmentConfigForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $tmp = explode('/', $values['config_name']);
-    $config_name = $tmp[(count($tmp) - 1)];
+    $config_name = $values['config_name'];
     $dir = $values['dir'];
     $content = $values['export'];
     file_put_contents($dir . '/' . $config_name, $content);
