@@ -79,15 +79,38 @@ function drush_ezconfig_manager_ezconfig_export() {
   }
 
   $temp_dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://ezconfig_temp");
+
   if (!realpath($temp_dir)) {
     \Drupal::service('file_system')->mkdir($temp_dir);
   }
 
   foreach ($patterns as $pattern) {
-    foreach (file_scan_directory($destination_dir, $pattern) as $file_url => $file) {
-      copy($file_url, $temp_dir . '/' . $file->filename);
-      $env_file = $environment->get('config') . '/' . $file->name . '.yml';
-      copy($env_file, $file_url);
+    foreach (ezconfig_manager_get_subdirs($destination_dir) as $dir) {
+      $check_dir = str_replace($destination_dir, $temp_dir, $dir);
+
+      if (!realpath($check_dir)) {
+        \Drupal::service('file_system')->mkdir($check_dir);
+      }
+      foreach (file_scan_directory($dir, $pattern) as $file_url => $file) {
+        if (file_exists($file_url)) {
+          copy($file_url, str_replace($destination_dir, $temp_dir, $file_url));
+        }
+      }
+    }
+  }
+
+  foreach ($patterns as $pattern) {
+    foreach (ezconfig_manager_get_subdirs($destination_dir) as $dir) {
+      $check_dir = str_replace($destination_dir, $temp_dir, $dir);
+
+      if (!realpath($check_dir)) {
+        \Drupal::service('file_system')->mkdir($check_dir);
+      }
+      foreach (file_scan_directory($dir, $pattern) as $file_url => $file) {
+        if (file_exists(str_replace($dir, $environment->get('config'), $file_url))) {
+          copy(str_replace($dir, $environment->get('config'), $file_url), $file_url);
+        }
+      }
     }
   }
 
@@ -113,8 +136,11 @@ function drush_ezconfig_manager_ezconfig_export() {
       }
     }
 
-    foreach (file_scan_directory($temp_dir, $pattern) as $file_url => $file) {
-      copy($file_url, $destination_dir . '/' . $file->filename);
+    foreach (ezconfig_manager_get_subdirs($temp_dir) as $subdir) {
+      foreach (file_scan_directory($subdir, $pattern) as $file_url => $file) {
+        copy($file_url, str_replace($temp_dir, $destination_dir, $file_url));
+        unlink($file_url);
+      }
     }
   }
 
