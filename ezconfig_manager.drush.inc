@@ -140,15 +140,24 @@ function drush_ezconfig_manager_ezconfig_import() {
 
   /** @var \Drupal\Core\Config\StorageInterface $active_storage */
   $active_storage = \Drupal::service('config.storage');
+  $config = $environment->get('config');
+  if (isset($config) && !empty($config)) {
+    $local_storage = new FileStorage($config);
+  }
 
   $source_storage = new StorageReplaceDataWrapper($active_storage);
   $file_storage = new FileStorage($source_dir);
   foreach ($file_storage->listAll() as $name) {
     $data = $file_storage->read($name);
+    if ($name == 'core.extension' && isset($config) && !empty($config)) {
+      $enable_modules = $local_storage->read('ezconfig_manager.enable_modules');
+      foreach ($enable_modules['modules'] as $module) {
+        $data['module'][$module] = 0;
+      }
+    }
     $source_storage->replaceData($name, $data);
   }
 
-  $config = $environment->get('config');
   if (isset($config) && !empty($config)) {
     $file_storage = new FileStorage($config);
     foreach ($file_storage->listAll() as $name) {
