@@ -5,12 +5,10 @@
  * Contains turbo-charged config commands for a better partial workflow.
  */
 
-use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\config\StorageReplaceDataWrapper;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\StorageComparer;
-use Drush\Config\StorageWrapper;
 use Drush\Log\LogLevel;
 
 /**
@@ -21,14 +19,14 @@ function ezconfig_manager_drush_command() {
   $items['ezconfig-export'] = [
     'description' => 'Export configuration to a directory and apply an copy list.',
     'core' => ['8+'],
-    'aliases' => ['ezcex']
+    'aliases' => ['ezcex'],
   ];
 
   $items['ezconfig-import'] = $deps + [
     'description' => 'Import config from a config directory resepecting live content and a delete list.',
     'core' => ['8+'],
     'aliases' =>
-    ['ezcim']
+    ['ezcim'],
   ];
 
   return $items;
