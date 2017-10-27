@@ -77,10 +77,21 @@ function drush_ezconfig_manager_ezconfig_export() {
   }
 
   $temp_dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://ezconfig_temp");
+  $backup_dir = \Drupal::service('file_system')->realpath(file_default_scheme() . "://ezconfig_backup");
 
   if (!realpath($temp_dir)) {
     \Drupal::service('file_system')->mkdir($temp_dir);
   }
+
+  if (!realpath($backup_dir)) {
+    \Drupal::service('file_system')->mkdir($backup_dir);
+  }
+  else {
+    deleteDir($backup_dir);
+    \Drupal::service('file_system')->mkdir($backup_dir);
+  }
+
+  _drush_config_export($backup_dir, $backup_dir, FALSE);
 
   foreach ($patterns as $pattern) {
     foreach (ezconfig_manager_get_subdirs($destination_dir) as $dir) {
@@ -138,6 +149,16 @@ function drush_ezconfig_manager_ezconfig_export() {
       foreach (file_scan_directory($subdir, $pattern) as $file_url => $file) {
         copy($file_url, str_replace($temp_dir, $destination_dir, $file_url));
         unlink($file_url);
+        $content = file_get_contents(str_replace($temp_dir, $backup_dir, $file_url));
+        $check = '';
+        if (file_exists(str_replace($temp_dir, $environment->get('config'), $file_url))) {
+          $check = file_get_contents(str_replace($temp_dir, $environment->get('config'), $file_url));
+        }
+
+        if ($new_string = preg_replace("/[^A-Za-z0-9?!]/", '', $content)
+          != $new_string = preg_replace("/[^A-Za-z0-9?!]/", '', $check)) {
+          file_put_contents(str_replace($temp_dir, $environment->get('config'), $file_url), $content);
+        }
       }
     }
   }
