@@ -108,7 +108,7 @@ function ezconfig_manager_get_dirs($exclude = FALSE) {
 }
 
 /**
- *
+ * Custom function to get subdirs.
  */
 function ezconfig_manager_get_subdirs($dir) {
   $sub = new \RecursiveIteratorIterator(

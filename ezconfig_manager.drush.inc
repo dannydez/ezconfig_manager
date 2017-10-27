@@ -162,7 +162,6 @@ function drush_ezconfig_manager_ezconfig_import() {
   drush_log(dt('Starting import'), LogLevel::DEBUG);
   $source_dir = $config_directories[CONFIG_SYNC_DIRECTORY];
 
-  /** @var \Drupal\Core\Config\StorageInterface $active_storage */
   $active_storage = \Drupal::service('config.storage');
   $config = $environment->get('config');
   if (isset($config) && !empty($config)) {
@@ -190,7 +189,6 @@ function drush_ezconfig_manager_ezconfig_import() {
     }
   }
 
-  /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
   $config_manager = \Drupal::service('config.manager');
   $storage_comparer = new StorageComparer($source_storage, $active_storage, $config_manager);
 
